@@ -11,31 +11,26 @@ from db import PERFIS, conectar
 
 app = Flask(__name__)
 
-# A chave que assina o cookie de sessão NUNCA fica no código: vem do ambiente.
-_chave = os.environ.get("SECRET_KEY")
-if not _chave:
+chave = os.environ.get("SECRET_KEY")
+if not chave:
     raise RuntimeError(
-        "Defina a variável de ambiente SECRET_KEY. Para gerar uma:\n"
-        '  python -c "import secrets; print(secrets.token_hex(32))"'
+        'Defina a variável de ambiente SECRET_KEY. Exemplo para gerar uma: '
+        'python -c "import secrets; print(secrets.token_hex(32))"'
     )
 
 app.config.update(
-    SECRET_KEY=_chave,
-    SESSION_COOKIE_HTTPONLY=True,                         # JavaScript não lê o cookie
+    SECRET_KEY=chave,
+    SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
 )
 
 db.criar_tabelas()
 
-# Hash "de mentira": o login gasta o mesmo tempo mesmo quando o usuário não existe.
-DUMMY_HASH = generate_password_hash("senha-para-igualar-o-tempo-de-resposta")
+HASH_FALSO = generate_password_hash("qualquer-coisa-aqui")
 
 
-# ------------------------------------------------------------ SESSÃO E ACESSO
 @app.before_request
 def carregar_usuario():
-    """A sessão guarda só o id. Perfil e situação vêm do banco a cada requisição,
-    então desativar uma conta ou mudar o perfil vale na hora."""
     g.usuario = None
     uid = session.get("usuario_id")
     if uid is None:
@@ -80,7 +75,6 @@ def acesso_negado(erro):
     return render_template("acesso_negado.html"), 403
 
 
-# --------------------------------------------------------------- LOGIN/LOGOUT
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if g.usuario is not None:
@@ -93,14 +87,13 @@ def login():
         with conectar() as con:
             u = con.execute("SELECT * FROM usuarios WHERE usuario=?", (nome,)).fetchone()
 
-        senha_confere = check_password_hash(u["senha_hash"] if u else DUMMY_HASH, senha)
+        confere = check_password_hash(u["senha_hash"] if u else HASH_FALSO, senha)
 
-        if u is not None and u["ativo"] and senha_confere:
-            session.clear()                 # descarta qualquer sessão anterior
+        if u is not None and u["ativo"] and confere:
+            session.clear()
             session["usuario_id"] = u["id"]
             return redirect(url_for("index"))
 
-        # mensagem genérica: não revela se o erro foi no usuário ou na senha
         flash("Usuário ou senha inválidos.", "erro")
         return render_template("login.html"), 401
 
@@ -113,8 +106,6 @@ def logout():
     return redirect(url_for("login"))
 
 
-# ------------------------------------------------------------------- PRODUTOS
-# READ
 @app.route("/")
 @login_required
 def index():
@@ -123,7 +114,6 @@ def index():
     return render_template("index.html", produtos=produtos)
 
 
-# CREATE
 @app.route("/adicionar", methods=["POST"])
 @login_required
 def adicionar():
@@ -135,7 +125,6 @@ def adicionar():
     return redirect(url_for("index"))
 
 
-# UPDATE
 @app.route("/editar/<int:id>", methods=["POST"])
 @login_required
 def editar(id):
@@ -147,7 +136,6 @@ def editar(id):
     return redirect(url_for("index"))
 
 
-# DELETE: só admin
 @app.route("/deletar/<int:id>", methods=["POST"])
 @admin_required
 def deletar(id):
@@ -156,7 +144,6 @@ def deletar(id):
     return redirect(url_for("index"))
 
 
-# ------------------------------------------------------------------- USUÁRIOS
 @app.route("/usuarios")
 @admin_required
 def listar_usuarios():
