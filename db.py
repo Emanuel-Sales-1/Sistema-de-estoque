@@ -32,6 +32,23 @@ def criar_tabelas():
                 perfil TEXT NOT NULL CHECK (perfil IN ('admin', 'comum')),
                 ativo INTEGER NOT NULL DEFAULT 1
             );
+            CREATE TABLE IF NOT EXISTS logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                data TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+                usuario TEXT,
+                acao TEXT NOT NULL,
+                detalhe TEXT
+            );
+            CREATE TRIGGER IF NOT EXISTS logs_sem_update
+            BEFORE UPDATE ON logs
+            BEGIN
+                SELECT RAISE(ABORT, 'os logs não podem ser alterados');
+            END;
+            CREATE TRIGGER IF NOT EXISTS logs_sem_delete
+            BEFORE DELETE ON logs
+            BEGIN
+                SELECT RAISE(ABORT, 'os logs não podem ser apagados');
+            END;
         """)
 
 
@@ -57,4 +74,14 @@ def criar_usuario(usuario, senha, perfil):
         con.execute(
             "INSERT INTO usuarios (usuario, senha_hash, perfil) VALUES (?, ?, ?)",
             (usuario, generate_password_hash(senha), perfil),
+        )
+
+
+def registrar(acao, detalhe="", usuario=None):
+    if usuario is not None:
+        usuario = usuario[:50]
+    with conectar() as con:
+        con.execute(
+            "INSERT INTO logs (usuario, acao, detalhe) VALUES (?, ?, ?)",
+            (usuario, acao, detalhe[:200]),
         )
