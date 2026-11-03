@@ -23,29 +23,9 @@ app.config.update(
     SECRET_KEY=_chave,
     SESSION_COOKIE_HTTPONLY=True,                         # JavaScript não lê o cookie
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=os.environ.get("PRODUCAO") == "1",  # só HTTPS em produção
 )
 
 db.criar_tabelas()
-
-
-def admin_inicial_por_ambiente():
-    """Opcional: cria o 1º admin a partir de variáveis de ambiente (útil no deploy,
-    onde não há terminal). Só age se ainda não existir nenhum admin."""
-    usuario = os.environ.get("ADMIN_USUARIO", "").strip().lower()
-    senha = os.environ.get("ADMIN_SENHA", "")
-    if not usuario or not senha or db.existe_admin():
-        return
-    erro = db.validar_credenciais(usuario, senha)
-    if erro:
-        raise RuntimeError(f"ADMIN_USUARIO/ADMIN_SENHA inválidos: {erro}")
-    try:
-        db.criar_usuario(usuario, senha, "admin")
-    except sqlite3.IntegrityError:
-        pass
-
-
-admin_inicial_por_ambiente()
 
 # Hash "de mentira": o login gasta o mesmo tempo mesmo quando o usuário não existe.
 DUMMY_HASH = generate_password_hash("senha-para-igualar-o-tempo-de-resposta")
