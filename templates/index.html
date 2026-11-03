@@ -22,15 +22,15 @@
     <form class="form-linha" style="grid-template-columns: 2fr 1fr 1fr auto" action="{{ url_for('adicionar') }}" method="POST">
       <div class="largo">
         <label for="nome">Nome</label>
-        <input id="nome" name="nome" required>
+        <input id="nome" name="nome" minlength="2" maxlength="100" required>
       </div>
       <div>
         <label for="preco">Preço (R$)</label>
-        <input id="preco" name="preco" type="number" step="0.01" min="0" required>
+        <input id="preco" name="preco" type="number" step="0.01" min="0" max="1000000" required>
       </div>
       <div>
         <label for="quantidade">Quantidade</label>
-        <input id="quantidade" name="quantidade" type="number" min="0" required>
+        <input id="quantidade" name="quantidade" type="number" step="1" min="0" max="9999999" required>
       </div>
       <button class="primario">Adicionar</button>
     </form>
@@ -47,10 +47,10 @@
         <tbody>
         {% for p in produtos %}
           <tr>
-            <td><input form="editar-{{ p.id }}" name="nome" value="{{ p.nome }}" required aria-label="Nome"></td>
-            <td><input form="editar-{{ p.id }}" name="preco" type="number" step="0.01" min="0" value="{{ p.preco }}" required aria-label="Preço"></td>
+            <td><input form="editar-{{ p.id }}" name="nome" value="{{ p.nome }}" minlength="2" maxlength="100" required aria-label="Nome"></td>
+            <td><input form="editar-{{ p.id }}" name="preco" type="number" step="0.01" min="0" max="1000000" value="{{ p.preco }}" required aria-label="Preço"></td>
             <td>
-              <input form="editar-{{ p.id }}" name="quantidade" type="number" min="0" value="{{ p.quantidade }}" required aria-label="Quantidade">
+              <input form="editar-{{ p.id }}" name="quantidade" type="number" step="1" min="0" max="9999999" value="{{ p.quantidade }}" required aria-label="Quantidade">
               {% if p.quantidade == 0 %}<span class="selo zerado">Sem estoque</span>
               {% elif p.quantidade <= 5 %}<span class="selo baixo">Estoque baixo</span>{% endif %}
             </td>
