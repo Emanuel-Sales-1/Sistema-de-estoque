@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Controle de Estoque{% endblock %}</title>
+  <style>
+    :root {
+      --fundo: #f3f6f9;
+      --painel: #ffffff;
+      --texto: #1d2b36;
+      --suave: #637381;
+      --borda: #dde4ea;
+      --azul: #1f6feb;
+      --azul-escuro: #1858bd;
+      --vermelho: #c93c37;
+      --vermelho-claro: #fdeceb;
+      --verde: #1a7f4b;
+      --verde-claro: #e6f5ec;
+      --amarelo: #8a5a00;
+      --amarelo-claro: #fff4d6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--fundo);
+      color: var(--texto);
+      line-height: 1.5;
+    }
+    header { background: var(--painel); border-bottom: 1px solid var(--borda); }
+    header .barra { max-width: 960px; margin: 0 auto; padding: 0 16px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+    header strong { font-size: 1.1rem; padding: 14px 0; }
+    nav { display: flex; gap: 4px; }
+    nav a { padding: 16px 12px 13px; color: var(--suave); text-decoration: none; border-bottom: 3px solid transparent; }
+    nav a:hover { color: var(--texto); }
+    nav a.ativo { color: var(--azul); border-bottom-color: var(--azul); font-weight: 600; }
+    .sessao { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: .9rem; }
+    .sessao form { margin: 0; }
+    .sessao .quem { color: var(--suave); }
+
+    main { max-width: 960px; margin: 0 auto; padding: 28px 16px 64px; }
+    h1 { font-size: 1.6rem; margin: 0 0 4px; }
+    h2 { font-size: 1.1rem; margin: 0 0 16px; }
+    .sub { color: var(--suave); margin: 0 0 24px; }
+
+    .msg { border-radius: 8px; padding: 10px 14px; margin-bottom: 20px; border: 1px solid; }
+    .msg.erro { background: var(--vermelho-claro); color: var(--vermelho); border-color: var(--vermelho); }
+    .msg.ok { background: var(--verde-claro); color: var(--verde); border-color: var(--verde); }
+
+    .resumo { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .resumo div { background: var(--painel); border: 1px solid var(--borda); border-radius: 10px; padding: 14px 16px; }
+    .resumo strong { display: block; font-size: 1.5rem; }
+    .resumo span { color: var(--suave); font-size: .9rem; }
+
+    .painel { background: var(--painel); border: 1px solid var(--borda); border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+
+    .form-linha { display: grid; gap: 12px; align-items: end; }
+    label { display: block; font-size: .85rem; color: var(--suave); margin-bottom: 4px; }
+    input, select {
+      width: 100%; padding: 9px 10px; font: inherit; color: var(--texto);
+      border: 1px solid var(--borda); border-radius: 6px; background: #fff;
+    }
+    input:focus-visible, select:focus-visible, button:focus-visible { outline: 3px solid #1f6feb55; outline-offset: 1px; border-color: var(--azul); }
+
+    button { font: inherit; padding: 9px 14px; border-radius: 6px; border: 1px solid transparent; cursor: pointer; }
+    .primario { background: var(--azul); color: #fff; }
+    .primario:hover { background: var(--azul-escuro); }
+    .secundario { background: #fff; color: var(--texto); border-color: var(--borda); }
+    .secundario:hover { background: var(--fundo); }
+    .perigo { background: #fff; color: var(--vermelho); border-color: var(--borda); }
+    .perigo:hover { background: var(--vermelho-claro); border-color: var(--vermelho); }
+
+    .tabela-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 640px; }
+    th { text-align: left; font-size: .85rem; color: var(--suave); font-weight: 600; padding: 8px; border-bottom: 1px solid var(--borda); }
+    td { padding: 8px; border-bottom: 1px solid var(--borda); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    td input, td select { padding: 7px 8px; }
+    td.acoes { white-space: nowrap; }
+    td.acoes form { display: inline; }
+    td.acoes button { padding: 7px 12px; }
+    td form.inline { display: flex; gap: 8px; align-items: center; }
+    td form.inline select { width: auto; }
+
+    .selo { display: inline-block; font-size: .75rem; padding: 2px 8px; border-radius: 999px; margin-top: 4px; }
+    .selo.baixo { background: var(--amarelo-claro); color: var(--amarelo); }
+    .selo.zerado, .selo.inativo { background: var(--vermelho-claro); color: var(--vermelho); }
+    .selo.ativo { background: var(--verde-claro); color: var(--verde); }
+
+    .vazio { text-align: center; color: var(--suave); padding: 32px 8px; margin: 0; }
+    .suave { color: var(--suave); }
+
+    .cartao-login { max-width: 380px; margin: 48px auto 0; }
+    .cartao-login form { display: grid; gap: 14px; }
+    .cartao-login button { width: 100%; }
+
+    @media (max-width: 720px) {
+      .form-linha { grid-template-columns: 1fr 1fr !important; }
+      .form-linha .largo { grid-column: 1 / -1; }
+      .form-linha button { grid-column: 1 / -1; }
+      .resumo { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="barra">
+    <strong>Controle de estoque</strong>
+    {% if usuario %}
+    <nav>
+      <a href="{{ url_for('index') }}" class="{{ 'ativo' if request.endpoint in ('index',) }}">Produtos</a>
+      {% if usuario.perfil == 'admin' %}
+      <a href="{{ url_for('listar_usuarios') }}" class="{{ 'ativo' if request.endpoint == 'listar_usuarios' }}">Usuários</a>
+      {% endif %}
+    </nav>
+    <div class="sessao">
+      <span class="quem">{{ usuario.usuario }} ({{ usuario.perfil }})</span>
+      <form action="{{ url_for('logout') }}" method="POST">
+        <button class="secundario">Sair</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</header>
+
+<main>
+  {% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% for categoria, texto in mensagens %}
+      <div class="msg {{ 'ok' if categoria == 'ok' else 'erro' }}" role="alert">{{ texto }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block conteudo %}{% endblock %}
+</main>
+</body>
+</html>

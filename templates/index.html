@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block titulo %}Produtos · Controle de Estoque{% endblock %}
+
+{% block conteudo %}
+  <h1>Produtos</h1>
+  <p class="sub">Cadastre, edite e acompanhe o estoque.</p>
+
+  {% set ns = namespace(unidades=0, valor=0) %}
+  {% for p in produtos %}
+    {% set ns.unidades = ns.unidades + p.quantidade %}
+    {% set ns.valor = ns.valor + (p.preco * p.quantidade) %}
+  {% endfor %}
+
+  <section class="resumo" aria-label="Resumo do estoque">
+    <div><strong>{{ produtos|length }}</strong><span>produtos cadastrados</span></div>
+    <div><strong>{{ ns.unidades }}</strong><span>unidades em estoque</span></div>
+    <div><strong>R$ {{ "%.2f"|format(ns.valor)|replace(".", ",") }}</strong><span>valor total</span></div>
+  </section>
+
+  <section class="painel">
+    <h2>Novo produto</h2>
+    <form class="form-linha" style="grid-template-columns: 2fr 1fr 1fr auto" action="{{ url_for('adicionar') }}" method="POST">
+      <div class="largo">
+        <label for="nome">Nome</label>
+        <input id="nome" name="nome" required>
+      </div>
+      <div>
+        <label for="preco">Preço (R$)</label>
+        <input id="preco" name="preco" type="number" step="0.01" min="0" required>
+      </div>
+      <div>
+        <label for="quantidade">Quantidade</label>
+        <input id="quantidade" name="quantidade" type="number" min="0" required>
+      </div>
+      <button class="primario">Adicionar</button>
+    </form>
+  </section>
+
+  <section class="painel">
+    <h2>Lista de produtos</h2>
+    {% if produtos %}
+    <div class="tabela-wrap">
+      <table>
+        <thead>
+          <tr><th>Nome</th><th>Preço (R$)</th><th>Quantidade</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+        {% for p in produtos %}
+          <tr>
+            <td><input form="editar-{{ p.id }}" name="nome" value="{{ p.nome }}" required aria-label="Nome"></td>
+            <td><input form="editar-{{ p.id }}" name="preco" type="number" step="0.01" min="0" value="{{ p.preco }}" required aria-label="Preço"></td>
+            <td>
+              <input form="editar-{{ p.id }}" name="quantidade" type="number" min="0" value="{{ p.quantidade }}" required aria-label="Quantidade">
+              {% if p.quantidade == 0 %}<span class="selo zerado">Sem estoque</span>
+              {% elif p.quantidade <= 5 %}<span class="selo baixo">Estoque baixo</span>{% endif %}
+            </td>
+            <td class="acoes">
+              <form id="editar-{{ p.id }}" action="{{ url_for('editar', id=p.id) }}" method="POST">
+                <button class="secundario">Salvar</button>
+              </form>
+              {% if usuario.perfil == 'admin' %}
+              <form action="{{ url_for('deletar', id=p.id) }}" method="POST" onsubmit="return confirm('Excluir {{ p.nome }}?')">
+                <button class="perigo">Excluir</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="vazio">Nenhum produto cadastrado. Use o formulário acima para adicionar o primeiro.</p>
+    {% endif %}
+  </section>
+{% endblock %}

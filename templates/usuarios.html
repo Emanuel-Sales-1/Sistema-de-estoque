@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block titulo %}Usuários · Controle de Estoque{% endblock %}
+
+{% block conteudo %}
+  <h1>Usuários</h1>
+  <p class="sub">Crie contas, defina perfis e desative quem não deve mais acessar.</p>
+
+  <section class="painel">
+    <h2>Novo usuário</h2>
+    <form class="form-linha" style="grid-template-columns: 2fr 2fr 1fr auto" action="{{ url_for('adicionar_usuario') }}" method="POST">
+      <div class="largo">
+        <label for="usuario">Usuário</label>
+        <input id="usuario" name="usuario" autocomplete="off" required>
+      </div>
+      <div class="largo">
+        <label for="senha">Senha (mínimo 8 caracteres)</label>
+        <input id="senha" name="senha" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+      </div>
+      <div>
+        <label for="perfil">Perfil</label>
+        <select id="perfil" name="perfil">
+          <option value="comum">comum</option>
+          <option value="admin">admin</option>
+        </select>
+      </div>
+      <button class="primario">Criar usuário</button>
+    </form>
+  </section>
+
+  <section class="painel">
+    <h2>Contas</h2>
+    <div class="tabela-wrap">
+      <table>
+        <thead>
+          <tr><th>Usuário</th><th>Perfil</th><th>Situação</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+        {% for u in usuarios %}
+          <tr>
+            <td>{{ u.usuario }}{% if u.id == usuario.id %} <span class="suave">(você)</span>{% endif %}</td>
+            <td>
+              {% if u.id == usuario.id %}
+                {{ u.perfil }}
+              {% else %}
+              <form class="inline" action="{{ url_for('alterar_perfil', id=u.id) }}" method="POST">
+                <select name="perfil" aria-label="Perfil de {{ u.usuario }}">
+                  <option value="comum" {{ 'selected' if u.perfil == 'comum' }}>comum</option>
+                  <option value="admin" {{ 'selected' if u.perfil == 'admin' }}>admin</option>
+                </select>
+                <button class="secundario">Salvar</button>
+              </form>
+              {% endif %}
+            </td>
+            <td>
+              {% if u.ativo %}<span class="selo ativo">Ativo</span>{% else %}<span class="selo inativo">Desativado</span>{% endif %}
+            </td>
+            <td class="acoes">
+              {% if u.id != usuario.id %}
+              <form action="{{ url_for('alternar_ativo', id=u.id) }}" method="POST">
+                {% if u.ativo %}<button class="perigo">Desativar</button>{% else %}<button class="secundario">Reativar</button>{% endif %}
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endblock %}

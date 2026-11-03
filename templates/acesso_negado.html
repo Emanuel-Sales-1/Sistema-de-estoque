@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block titulo %}Acesso negado · Controle de Estoque{% endblock %}
+
+{% block conteudo %}
+  <section class="painel">
+    <h1>Acesso negado</h1>
+    <p class="sub">Seu perfil não tem permissão para essa ação. Fale com um administrador se precisar dela.</p>
+    <a href="{{ url_for('index') }}">Voltar para os produtos</a>
+  </section>
+{% endblock %}
